@@ -96,8 +96,7 @@ export default {
           model: "gemini-3-pro-image-preview",
           contents: [{ role: "user", parts }],
           config: {
-            // @ts-ignore
-            imageConfig: { aspectRatio: "1:1", imageSize: "1K" }
+            responseModalities: ["IMAGE"]
           }
         });
 
