@@ -15,7 +15,7 @@ export default {
 
     try {
       const { action, payload } = await request.json() as any;
-      const genAI = new GoogleGenAI(env.GEMINI_API_KEY);
+      const genAI = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
 
       if (action === "analyzeImage") {
         const model = genAI.getGenerativeModel({
@@ -81,12 +81,11 @@ export default {
         const contents = [{ text: payload.prompt }];
         if (payload.base64Data && payload.mimeType) {
           contents.unshift({
-            // @ts-ignore
             inlineData: { data: payload.base64Data, mimeType: payload.mimeType }
           } as any);
         }
 
-        const result = await model.generateContent({ contents });
+        const result = await model.generateContent(contents);
         const response = await result.response;
         
         for (const part of response.candidates?.[0]?.content?.parts || []) {
