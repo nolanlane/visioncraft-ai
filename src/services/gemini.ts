@@ -2,9 +2,11 @@ import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { AnalysisResult, Suggestion } from "./types";
 
 const getAI = () => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("VITE_GEMINI_API_KEY is not defined. Please check your .env file or Cloudflare Build Variables.");
+  // Check both Vite standard and the process.env fallback defined in vite.config.ts
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+  
+  if (!apiKey || apiKey === "undefined") {
+    throw new Error("Gemini API Key is not defined. Please ensure VITE_GEMINI_API_KEY or GEMINI_API_KEY is set in your Cloudflare Build Variables.");
   }
   return new GoogleGenAI({ apiKey });
 };
@@ -81,9 +83,9 @@ export async function generatePrompt(
 
 export async function generateImage(prompt: string, base64Data?: string, mimeType?: string): Promise<string> {
   // Use the user's selected API key for image generation
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("VITE_GEMINI_API_KEY is not defined.");
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === "undefined") {
+    throw new Error("Gemini API Key is not defined for image generation.");
   }
   const ai = new GoogleGenAI({ apiKey });
   
