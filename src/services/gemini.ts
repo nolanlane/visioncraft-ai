@@ -1,4 +1,4 @@
-import { AnalysisResult, Suggestion } from "./types";
+import { AnalysisResult, Suggestion } from "../types";
 
 async function callWorker(action: string, payload: any) {
   const response = await fetch("/api/gemini", {

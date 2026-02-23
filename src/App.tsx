@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -26,15 +26,6 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-declare global {
-  interface Window {
-    aistudio: {
-      hasSelectedApiKey: () => Promise<boolean>;
-      openSelectKey: () => Promise<void>;
-    };
-  }
-}
-
 export default function App() {
   const [state, setState] = useState<AppState>('idle');
   const [image, setImage] = useState<{ file: File; preview: string; base64: string } | null>(null);
@@ -42,18 +33,7 @@ export default function App() {
   const [selectedSuggestion, setSelectedSuggestion] = useState<Suggestion | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [hasKey, setHasKey] = useState(false);
   const [userPrompt, setUserPrompt] = useState('');
-
-  useEffect(() => {
-    const checkKey = async () => {
-      if (window.aistudio) {
-        const selected = await window.aistudio.hasSelectedApiKey();
-        setHasKey(selected);
-      }
-    };
-    checkKey();
-  }, []);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -99,12 +79,6 @@ export default function App() {
   };
 
   const handleSelectSuggestion = async (suggestion: Suggestion) => {
-    if (!hasKey) {
-      await window.aistudio.openSelectKey();
-      setHasKey(true);
-      // Proceed after key selection
-    }
-
     setSelectedSuggestion(suggestion);
     setState('generating');
     setError(null);
