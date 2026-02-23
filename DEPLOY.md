@@ -36,7 +36,7 @@ npx wrangler pages deploy dist --project-name=visioncraft-ai
 ## Environment Variables
 
 Add these in your Pages project settings:
-- `GEMINI_API_KEY` - Your Gemini API key for AI image generation
+- `VITE_GEMINI_API_KEY` - Your Gemini API key for AI image generation
 
 ## Custom Domain (Optional)
 
