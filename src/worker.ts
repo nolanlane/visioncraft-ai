@@ -93,7 +93,7 @@ export default {
         }
 
         const response = await genAI.models.generateContent({
-          model: "nano-banana-pro",
+          model: "gemini-3-pro-image-preview",
           contents: [{ role: "user", parts }],
           config: {
             // @ts-ignore
