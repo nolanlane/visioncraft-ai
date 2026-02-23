@@ -1,0 +1,10 @@
+name = "visioncraft-ai"
+compatibility_date = "2026-02-23"
+
+[build]
+command = "npm run build"
+output_dir = "dist"
+
+[pages]
+output_dir = "dist"
+watch_dir = "src"
