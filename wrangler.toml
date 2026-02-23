@@ -8,3 +8,6 @@ output_dir = "dist"
 [pages]
 output_dir = "dist"
 watch_dir = "src"
+
+[assets]
+directory = "./dist"
