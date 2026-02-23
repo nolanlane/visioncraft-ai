@@ -71,11 +71,7 @@ export default {
 
       if (action === "generateImage") {
         const model = genAI.getGenerativeModel({
-          model: "gemini-3-pro-image-preview",
-          generationConfig: {
-            // @ts-ignore
-            imageConfig: { aspectRatio: "1:1", imageSize: "1K" }
-          }
+          model: "nano-banana-pro"
         });
         
         const contents = [{ text: payload.prompt }];
@@ -85,7 +81,13 @@ export default {
           } as any);
         }
 
-        const result = await model.generateContent(contents);
+        const result = await model.generateContent({
+          contents,
+          generationConfig: {
+            // @ts-ignore
+            imageConfig: { aspectRatio: "1:1", imageSize: "1K" }
+          }
+        });
         const response = await result.response;
         
         for (const part of response.candidates?.[0]?.content?.parts || []) {
