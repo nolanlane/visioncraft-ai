@@ -92,7 +92,6 @@ export default function App() {
       console.error(err);
       if (err.message?.includes("Requested entity was not found")) {
         setError("API Key issue. Please re-select your key.");
-        setHasKey(false);
       } else {
         setError("Failed to generate image. Please try again.");
       }
@@ -304,7 +303,7 @@ export default function App() {
                   Translating "<span className="text-emerald-400">{selectedSuggestion?.title}</span>" into a high-fidelity prompt for Nano Banana Pro.
                 </p>
                 <div className="pt-4 flex flex-col items-center gap-2">
-                  <p className="text-[10px] text-zinc-600 uppercase tracking-widest">Model: gemini-3-pro-image-preview</p>
+                  <p className="text-[10px] text-zinc-600 uppercase tracking-widest">Model: nano-banana-pro</p>
                   <a 
                     href="https://ai.google.dev/gemini-api/docs/billing" 
                     target="_blank" 
@@ -328,7 +327,7 @@ export default function App() {
             >
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Behold.</h2>
-                <p className="text-zinc-400">Your vision, reimagined through the lens of <span className="text-emerald-400">{selectedSuggestion?.title}</span>.</p>
+                <p className="text-zinc-400">Your vision, reimagined through the lens of {selectedSuggestion?.title}.</p>
               </div>
 
               <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-emerald-500/10">

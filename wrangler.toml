@@ -1,6 +1,7 @@
 name = "visioncraft-ai-2"
 main = "src/worker.ts"
 compatibility_date = "2026-02-23"
+account_id = "411b81dfd163d828f39ce4c91cb0b6a0"
 
 [assets]
 command = "npm run build"
