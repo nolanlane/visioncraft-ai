@@ -4,6 +4,98 @@ export interface Env {
   GEMINI_API_KEY: string;
 }
 
+type AnalyzeImagePayload = {
+  base64Data: string;
+  mimeType: string;
+  prompt: string;
+};
+
+type GeneratePromptPayload = {
+  prompt: string;
+};
+
+type GenerateImagePayload = {
+  prompt: string;
+  base64Data?: string;
+  mimeType?: string;
+};
+
+type RequestBody =
+  | { action: "analyzeImage"; payload: AnalyzeImagePayload }
+  | { action: "generatePrompt"; payload: GeneratePromptPayload }
+  | { action: "generateImage"; payload: GenerateImagePayload };
+
+const MAX_BASE64_LENGTH = 8 * 1024 * 1024; // 8MB base64 string length guard
+
+const analyzeResponseSchema = {
+  type: "object",
+  properties: {
+    imageDescription: { type: "string" },
+    suggestions: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          title: { type: "string" },
+          description: { type: "string" },
+          reasoning: { type: "string" },
+        },
+        required: ["id", "title", "description", "reasoning"],
+      },
+    },
+  },
+  required: ["imageDescription", "suggestions"],
+} as const;
+
+function ensureApiKey(env: Env) {
+  if (!env.GEMINI_API_KEY) {
+    throw new Error("Missing GEMINI_API_KEY environment variable");
+  }
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function validateBase64Field(value: unknown): value is string {
+  return isNonEmptyString(value) && value.length <= MAX_BASE64_LENGTH;
+}
+
+function validateAnalyzeImagePayload(payload: any): asserts payload is AnalyzeImagePayload {
+  if (!validateBase64Field(payload?.base64Data)) {
+    throw new Error("Invalid or missing base64Data for analyzeImage");
+  }
+  if (!isNonEmptyString(payload?.mimeType)) {
+    throw new Error("Invalid or missing mimeType for analyzeImage");
+  }
+  if (!isNonEmptyString(payload?.prompt)) {
+    throw new Error("Invalid or missing prompt for analyzeImage");
+  }
+}
+
+function validateGeneratePromptPayload(payload: any): asserts payload is GeneratePromptPayload {
+  if (!isNonEmptyString(payload?.prompt)) {
+    throw new Error("Invalid or missing prompt for generatePrompt");
+  }
+}
+
+function validateGenerateImagePayload(payload: any): asserts payload is GenerateImagePayload {
+  if (!isNonEmptyString(payload?.prompt)) {
+    throw new Error("Invalid or missing prompt for generateImage");
+  }
+
+  const hasImage = payload?.base64Data !== undefined || payload?.mimeType !== undefined;
+  if (hasImage) {
+    if (!validateBase64Field(payload.base64Data)) {
+      throw new Error("Invalid base64Data for generateImage");
+    }
+    if (!isNonEmptyString(payload.mimeType)) {
+      throw new Error("Invalid mimeType for generateImage");
+    }
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -14,115 +106,85 @@ export default {
     }
 
     try {
-      const { action, payload } = await request.json() as any;
+      ensureApiKey(env);
+      const body = (await request.json()) as Partial<RequestBody>;
+      const { action, payload } = body;
       const genAI = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
 
       if (action === "analyzeImage") {
-        const response = await genAI.models.generateContent({
-          model: "gemini-3-flash-preview",
+        validateAnalyzeImagePayload(payload);
+
+        const result = await genAI.models.generateContent({
+          model: "gemini-2.5-flash",
           contents: [
             {
               role: "user",
               parts: [
-                { text: payload.prompt },
                 {
                   inlineData: {
+                    data: payload.base64Data,
                     mimeType: payload.mimeType,
-                    data: payload.base64Data
-                  }
-                }
-              ]
-            }
+                  },
+                },
+                { text: payload.prompt },
+              ],
+            },
           ],
           config: {
             responseMimeType: "application/json",
-            responseSchema: {
-              type: "OBJECT",
-              properties: {
-                imageDescription: { type: "STRING" },
-                suggestions: {
-                  type: "ARRAY",
-                  items: {
-                    type: "OBJECT",
-                    properties: {
-                      id: { type: "STRING" },
-                      title: { type: "STRING" },
-                      description: { type: "STRING" },
-                      reasoning: { type: "STRING" },
-                    },
-                    required: ["id", "title", "description", "reasoning"],
-                  },
-                },
-              },
-              required: ["imageDescription", "suggestions"],
-            }
-          }
+            responseSchema: analyzeResponseSchema as unknown as object,
+          },
         });
-        
-        const text = response.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!text) throw new Error("No text generated by Gemini");
 
-        return new Response(text, {
+        return new Response(result.text, {
           headers: { "Content-Type": "application/json" },
         });
       }
 
       if (action === "generatePrompt") {
-        const response = await genAI.models.generateContent({
-          model: "gemini-3-flash-preview",
-          contents: [{ role: "user", parts: [{ text: payload.prompt }] }]
-        });
-        
-        const text = response.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!text) throw new Error("No text generated by Gemini");
+        validateGeneratePromptPayload(payload);
 
-        return new Response(JSON.stringify({ text }), {
+        const result = await genAI.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: [{ role: "user", parts: [{ text: payload.prompt }] }],
+        });
+        return new Response(JSON.stringify({ text: result.text }), {
           headers: { "Content-Type": "application/json" },
         });
       }
 
       if (action === "generateImage") {
-        const parts: any[] = [{ text: payload.prompt }];
+        validateGenerateImagePayload(payload);
+
+        const parts: Array<any> = [{ text: payload.prompt }];
         if (payload.base64Data && payload.mimeType) {
-          parts.push({
-            inlineData: {
-              mimeType: payload.mimeType,
-              data: payload.base64Data
-            }
-          });
+          parts.unshift({ inlineData: { data: payload.base64Data, mimeType: payload.mimeType } });
         }
 
-        const response = await genAI.models.generateContent({
-          model: "gemini-3-pro-image-preview",
+        const result = await genAI.models.generateContent({
+          model: "gemini-2.5-flash-image",
           contents: [{ role: "user", parts }],
           config: {
-            responseModalities: ["IMAGE"]
-          }
+            imageConfig: { aspectRatio: "1:1", imageSize: "1024" } as unknown as object,
+          },
         });
 
-        const candidates = response.candidates;
-        if (candidates && candidates[0] && candidates[0].content && candidates[0].content.parts) {
-             for (const part of candidates[0].content.parts) {
-                 if (part.inlineData) {
-                     return new Response(JSON.stringify({ text: `data:${part.inlineData.mimeType};base64,${part.inlineData.data}` }), {
-                         headers: { "Content-Type": "application/json" },
-                     });
-                 }
-             }
+        for (const candidate of result.candidates ?? []) {
+          for (const part of candidate.content?.parts ?? []) {
+            if ("inlineData" in part && part.inlineData) {
+              return new Response(
+                JSON.stringify({ text: `data:image/png;base64,${part.inlineData.data}` }),
+                { headers: { "Content-Type": "application/json" } }
+              );
+            }
+          }
         }
-        
-        // Fallback: Check if there's a text part that might contain a URL or error message
-        const textPart = candidates?.[0]?.content?.parts?.find((p: any) => p.text);
-        if (textPart) {
-             throw new Error(`Gemini returned text instead of image: ${textPart.text}`);
-        }
-
         throw new Error("No image generated by Gemini");
       }
 
-      return new Response("Invalid Action", { status: 400 });
+      return new Response(JSON.stringify({ error: "Invalid Action" }), { status: 400 });
     } catch (error: any) {
-      return new Response(JSON.stringify({ error: error.message }), {
+      return new Response(JSON.stringify({ error: error?.message ?? "Unexpected error" }), {
         status: 500,
         headers: { "Content-Type": "application/json" },
       });
