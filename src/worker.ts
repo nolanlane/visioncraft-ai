@@ -18,6 +18,7 @@ type GenerateImagePayload = {
   prompt: string;
   base64Data?: string;
   mimeType?: string;
+  model?: string;
 };
 
 type RequestBody =
@@ -161,8 +162,12 @@ export default {
           parts.unshift({ inlineData: { data: payload.base64Data, mimeType: payload.mimeType } });
         }
 
+        const modelId = payload.model && isNonEmptyString(payload.model)
+          ? payload.model
+          : "gemini-2.5-flash-image";
+
         const result = await genAI.models.generateContent({
-          model: "gemini-2.5-flash-image",
+          model: modelId,
           contents: [{ role: "user", parts }],
           config: {
             imageConfig: { aspectRatio: "1:1", imageSize: "1024" } as unknown as object,

@@ -1,18 +1,31 @@
 import { AnalysisResult, Suggestion } from "../types";
 
 async function callWorker(action: string, payload: any) {
-  const response = await fetch("/api/gemini", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action, payload }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60_000); // 60s safety
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to call Gemini Worker");
+  try {
+    const response = await fetch("/api/gemini", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, payload }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || `Gemini Worker ${response.status}`);
+    }
+
+    return response.json();
+  } catch (err: any) {
+    if (err?.name === "AbortError") {
+      throw new Error("Request timed out. Please try again.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  return response.json();
 }
 
 export async function analyzeImage(base64Data: string, mimeType: string, userGuidance?: string): Promise<AnalysisResult> {
@@ -40,7 +53,12 @@ export async function generatePrompt(
   return result.text;
 }
 
-export async function generateImage(prompt: string, base64Data?: string, mimeType?: string): Promise<string> {
-  const result = await callWorker("generateImage", { prompt, base64Data, mimeType });
+export async function generateImage(
+  prompt: string,
+  base64Data?: string,
+  mimeType?: string,
+  model?: string
+): Promise<string> {
+  const result = await callWorker("generateImage", { prompt, base64Data, mimeType, model });
   return result.text;
 }
