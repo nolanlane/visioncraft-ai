@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { useDropzone, type DropzoneOptions } from 'react-dropzone';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Upload, 
@@ -54,11 +54,16 @@ export default function App() {
     reader.readAsDataURL(file);
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const dropzoneConfig: DropzoneOptions = {
     onDrop,
     accept: { 'image/*': [] as string[] },
-    multiple: false
-  });
+    multiple: false,
+    onDragEnter: () => undefined,
+    onDragOver: () => undefined,
+    onDragLeave: () => undefined,
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone(dropzoneConfig);
 
   const handleAnalyze = async () => {
     if (!image) return;
@@ -227,35 +232,6 @@ export default function App() {
                 <p className="text-xs text-zinc-600">
                   AI is searching the web for creative inspiration and trends.
                 </p>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-xs uppercase tracking-widest font-bold text-zinc-600">Image Model</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => setImageModel('gemini-2.5-flash-image')}
-                    className={cn(
-                      "p-3 rounded-2xl border text-sm font-semibold transition-all",
-                      imageModel === 'gemini-2.5-flash-image'
-                        ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.25)]"
-                        : "border-white/10 bg-white/5 text-zinc-300 hover:border-white/20"
-                    )}
-                  >
-                    gemini-2.5-flash-image
-                  </button>
-                  <button
-                    onClick={() => setImageModel('gemini-3-pro-image-preview')}
-                    className={cn(
-                      "p-3 rounded-2xl border text-sm font-semibold transition-all",
-                      imageModel === 'gemini-3-pro-image-preview'
-                        ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.25)]"
-                        : "border-white/10 bg-white/5 text-zinc-300 hover:border-white/20"
-                    )}
-                  >
-                    gemini-3-pro-image-preview
-                  </button>
-                </div>
-                <p className="text-xs text-zinc-500">Choose which image model to use for generation.</p>
               </div>
             </motion.div>
           )}
