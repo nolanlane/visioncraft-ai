@@ -20,6 +20,7 @@ import {
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { AppState, Suggestion, AnalysisResult } from './types';
+import { IMAGE_MODELS, type ImageModelId } from './constants/models';
 import { analyzeImage, generatePrompt, generateImage } from './services/gemini';
 
 function cn(...inputs: ClassValue[]) {
@@ -34,7 +35,9 @@ export default function App() {
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [userPrompt, setUserPrompt] = useState('');
-  const [imageModel, setImageModel] = useState<'gemini-2.5-flash-image' | 'gemini-3-pro-image-preview'>('gemini-2.5-flash-image');
+  const [imageModel, setImageModel] = useState<ImageModelId>(IMAGE_MODELS[0].id);
+
+  const activeModel = IMAGE_MODELS.find((model) => model.id === imageModel) ?? IMAGE_MODELS[0];
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -166,6 +169,32 @@ export default function App() {
                 />
                 <p className="text-xs text-zinc-500">
                   Guide the AI's thinking and web search for more tailored suggestions
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="image-model" className="text-sm font-medium text-zinc-300">
+                  Image Model
+                </label>
+                <div className="relative">
+                  <select
+                    id="image-model"
+                    value={imageModel}
+                    onChange={(event) => setImageModel(event.target.value as ImageModelId)}
+                    className="w-full appearance-none px-4 py-3 pr-10 rounded-2xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all text-sm"
+                  >
+                    {IMAGE_MODELS.map((model) => (
+                      <option key={model.id} value={model.id} className="bg-black">
+                        {model.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
+                    <ChevronRight className="w-4 h-4 text-zinc-500 rotate-90" />
+                  </div>
+                </div>
+                <p className="text-xs text-zinc-500">
+                  {activeModel.hint}
                 </p>
               </div>
 
@@ -306,10 +335,11 @@ export default function App() {
               <div className="text-center space-y-3">
                 <h3 className="text-xl font-medium">Crafting your masterpiece</h3>
                 <p className="text-sm text-zinc-500 max-w-sm">
-                  Translating "<span className="text-emerald-400">{selectedSuggestion?.title}</span>" into a high-fidelity prompt for Nano Banana Pro.
+                  Translating "<span className="text-emerald-400">{selectedSuggestion?.title}</span>" into a high-fidelity prompt for {activeModel.label}.
                 </p>
                 <div className="pt-4 flex flex-col items-center gap-2">
-                  <p className="text-[10px] text-zinc-600 uppercase tracking-widest">Model: nano-banana-pro</p>
+                  <p className="text-[10px] text-zinc-600 uppercase tracking-widest">Model: {activeModel.id}</p>
+                  <p className="text-[10px] text-zinc-600 text-center max-w-xs">{activeModel.hint}</p>
                   <a 
                     href="https://ai.google.dev/gemini-api/docs/billing" 
                     target="_blank" 

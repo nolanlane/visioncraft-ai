@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { IMAGE_MODEL_IDS } from "./constants/models";
 
 export interface Env {
   GEMINI_API_KEY: string;
@@ -20,6 +21,8 @@ type GenerateImagePayload = {
   mimeType?: string;
   model?: string;
 };
+
+const IMAGE_MODELS = new Set(IMAGE_MODEL_IDS);
 
 type RequestBody =
   | { action: "analyzeImage"; payload: AnalyzeImagePayload }
@@ -162,7 +165,7 @@ export default {
           parts.unshift({ inlineData: { data: payload.base64Data, mimeType: payload.mimeType } });
         }
 
-        const modelId = payload.model && isNonEmptyString(payload.model)
+        const modelId = payload.model && IMAGE_MODELS.has(payload.model)
           ? payload.model
           : "gemini-2.5-flash-image";
 
