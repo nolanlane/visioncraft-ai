@@ -131,23 +131,24 @@ export default function App() {
           </div>
           <div className="flex items-center gap-3">
             {state !== 'generating' && state !== 'result' && (
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-zinc-500">
-                <span>Model</span>
+              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-300">
+                <span className="uppercase tracking-widest text-[10px] text-zinc-500">Model</span>
                 <div className="relative">
                   <select
                     aria-label="Select image model"
                     value={imageModel}
                     onChange={(event) => setImageModel(event.target.value as ImageModelId)}
-                    className="appearance-none pl-2 pr-6 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-200 focus:outline-none focus:border-emerald-500/50 text-[10px]"
+                    className="appearance-none pl-3 pr-8 py-2 rounded-full bg-[#0b0b0b] border border-emerald-500/40 text-emerald-200 shadow-[0_0_12px_rgba(16,185,129,0.25)] focus:outline-none focus:border-emerald-400 text-xs"
+                    style={{ minWidth: 180 }}
                   >
                     {IMAGE_MODELS.map((model) => (
-                      <option key={model.id} value={model.id} className="bg-black">
+                      <option key={model.id} value={model.id} className="bg-black text-white">
                         {model.label}
                       </option>
                     ))}
                   </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
-                    <ChevronRight className="w-3 h-3 text-zinc-500 rotate-90" />
+                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                    <ChevronRight className="w-3 h-3 text-emerald-300 rotate-90" />
                   </div>
                 </div>
               </div>
@@ -196,31 +197,33 @@ export default function App() {
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="image-model" className="text-sm font-medium text-zinc-300">
-                  Image Model
-                </label>
-                <div className="relative">
-                  <select
-                    id="image-model"
-                    value={imageModel}
-                    onChange={(event) => setImageModel(event.target.value as ImageModelId)}
-                    className="w-full appearance-none px-4 py-3 pr-10 rounded-2xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all text-sm"
-                  >
-                    {IMAGE_MODELS.map((model) => (
-                      <option key={model.id} value={model.id} className="bg-black">
-                        {model.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
-                    <ChevronRight className="w-4 h-4 text-zinc-500 rotate-90" />
+              {state !== 'generating' && state !== 'result' && (
+                <div className="space-y-2">
+                  <label htmlFor="image-model" className="text-sm font-medium text-zinc-300">
+                    Image Model
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="image-model"
+                      value={imageModel}
+                      onChange={(event) => setImageModel(event.target.value as ImageModelId)}
+                      className="w-full appearance-none px-4 py-3 pr-10 rounded-2xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all text-sm"
+                    >
+                      {IMAGE_MODELS.map((model) => (
+                        <option key={model.id} value={model.id} className="bg-black">
+                          {model.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
+                      <ChevronRight className="w-4 h-4 text-zinc-500 rotate-90" />
+                    </div>
                   </div>
+                  <p className="text-xs text-zinc-500">
+                    {activeModel.hint}
+                  </p>
                 </div>
-                <p className="text-xs text-zinc-500">
-                  {activeModel.hint}
-                </p>
-              </div>
+              )}
 
               <div
                 {...getRootProps()}
