@@ -2,7 +2,7 @@ import { AnalysisResult, Suggestion } from "../types";
 
 async function callWorker(action: string, payload: any) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 60_000); // 60s safety
+  const timeout = setTimeout(() => controller.abort(), 120_000); // 120s safety for heavier image models
 
   try {
     const response = await fetch("/api/gemini", {

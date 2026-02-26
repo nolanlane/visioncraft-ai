@@ -102,7 +102,7 @@ export default function App() {
       if (err.message?.includes("Requested entity was not found")) {
         setError("API Key issue. Please re-select your key.");
       } else {
-        setError("Failed to generate image. Please try again.");
+        setError(`Failed to generate image. ${err?.message ?? "Please try again."}`);
       }
       setState('suggesting');
     }
