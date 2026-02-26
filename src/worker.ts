@@ -169,11 +169,13 @@ export default {
           ? payload.model
           : "gemini-2.5-flash-image";
 
+        const imageSize = modelId === "gemini-3-pro-image-preview" ? "768" : "1024";
+
         const result = await genAI.models.generateContent({
           model: modelId,
           contents: [{ role: "user", parts }],
           config: {
-            imageConfig: { aspectRatio: "1:1", imageSize: "1024" } as unknown as object,
+            imageConfig: { aspectRatio: "1:1", imageSize } as unknown as object,
           },
         });
 
