@@ -129,14 +129,36 @@ export default function App() {
             </div>
             <h1 className="text-xl font-bold tracking-tight">VisionCraft</h1>
           </div>
-          {state !== 'idle' && (
-            <button 
-              onClick={reset}
-              className="text-xs uppercase tracking-widest font-semibold opacity-50 hover:opacity-100 transition-opacity"
-            >
-              Reset
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 text-[10px] uppercase tracking-widest text-zinc-500">
+              <span>Model</span>
+              <div className="relative">
+                <select
+                  aria-label="Select image model"
+                  value={imageModel}
+                  onChange={(event) => setImageModel(event.target.value as ImageModelId)}
+                  className="appearance-none pl-2 pr-6 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-200 focus:outline-none focus:border-emerald-500/50 text-[10px]"
+                >
+                  {IMAGE_MODELS.map((model) => (
+                    <option key={model.id} value={model.id} className="bg-black">
+                      {model.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
+                  <ChevronRight className="w-3 h-3 text-zinc-500 rotate-90" />
+                </div>
+              </div>
+            </div>
+            {state !== 'idle' && (
+              <button 
+                onClick={reset}
+                className="text-xs uppercase tracking-widest font-semibold opacity-50 hover:opacity-100 transition-opacity"
+              >
+                Reset
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
