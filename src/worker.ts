@@ -100,6 +100,15 @@ function validateGenerateImagePayload(payload: any): asserts payload is Generate
   }
 }
 
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(message)), timeoutMs)
+    ),
+  ]);
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -171,13 +180,18 @@ export default {
 
         const imageSize = modelId === "gemini-3-pro-image-preview" ? "768" : "1024";
 
-        const result = await genAI.models.generateContent({
+        const timeoutMs = modelId === "gemini-3-pro-image-preview" ? 25_000 : 45_000;
+        const result = await withTimeout(
+          genAI.models.generateContent({
           model: modelId,
           contents: [{ role: "user", parts }],
           config: {
             imageConfig: { aspectRatio: "1:1", imageSize } as unknown as object,
           },
-        });
+          }),
+          timeoutMs,
+          "Image generation exceeded the runtime limit. This model is too slow for the current Cloudflare Worker timeout."
+        );
 
         for (const candidate of result.candidates ?? []) {
           for (const part of candidate.content?.parts ?? []) {
